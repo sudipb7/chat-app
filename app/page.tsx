@@ -1,14 +1,23 @@
 import React from "react";
-import { ModeToggle } from "@/components/ui/mode-toggle";
+import Link from "next/link";
+
 import { Button } from "@/components/ui/button";
 
-export default function HomePage() {
+export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col gap-4 items-center justify-center">
-      <h1 className="text-3xl font-bold">Home Page</h1>
-      <p className="text-lg">Welcome to the home page</p>
-      <ModeToggle />
-      <Button>Get Started</Button>
-    </div>
+    <main className="h-screen grid place-items-center">
+      <div className="space-y-2.5 flex flex-col mx-auto max-w-lg">
+        <h1 className="text-3xl font-semibold">
+          Welcome to Chat App
+        </h1>
+        <p className="text-muted-foreground font-mono">
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt
+          ut labore et dolore magna aliqua.
+        </p>
+        <Button asChild className="w-fit">
+          <Link href="/sign-in">Get Started</Link>
+        </Button>
+      </div>
+    </main>
   );
 }
