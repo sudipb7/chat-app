@@ -14,7 +14,7 @@ export const POST = withSession(
 
     const { username } = validated.data;
 
-    const existingUser = await db.user.findUnique({ where: { username } });
+    const existingUser = await db.user.findUnique({ where: { username: username.toLowerCase() } });
     if (existingUser) {
       return new NextResponse("Username is not available", { status: 400 });
     }

@@ -18,7 +18,10 @@ export const PATCH = withSession(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const user = await db.user.update({ where: { id: session.id }, data: validated.data });
+    const user = await db.user.update({
+      where: { id: session.id },
+      data: { ...validated.data, username: validated.data.username.toLowerCase() },
+    });
 
     // Set onboarding step
     if (isOnboarding && !session.username) {

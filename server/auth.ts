@@ -1,14 +1,15 @@
-import jwt from "jsonwebtoken";
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import Github from "next-auth/providers/github";
 import Resend from "next-auth/providers/resend";
 import { JWT } from "next-auth/jwt";
+import { SignJWT, jwtVerify } from "jose";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 
 import db from "./db";
 import { getUserByEmail, getUserById } from "./queries";
 
+const IS_PROD = process.env.NODE_ENV === "production";
 const OAUTH_OPTIONS = { allowDangerousEmailAccountLinking: true };
 const RESEND_OPTIONS = {
   from: `no-reply@${process.env.RESEND_DOMAIN}`,
@@ -78,11 +79,26 @@ export const {
   session: { strategy: "jwt" },
   jwt: {
     async encode({ secret, token }) {
-      return jwt.sign({ ...token }, secret as string);
+      return await new SignJWT(token)
+        .setProtectedHeader({ alg: "HS256" })
+        .sign(new TextEncoder().encode(secret as string));
     },
     async decode({ secret, token }) {
       if (!token) return null;
-      return jwt.verify(token, secret as string) as JWT;
+      return (await jwtVerify(token, new TextEncoder().encode(secret as string))).payload as JWT;
+    },
+  },
+  cookies: {
+    sessionToken: {
+      name: IS_PROD ? "__Secure" : "" + "authjs.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        // Adding a leading dot in the domain allows subdomains to access the cookie
+        domain: IS_PROD ? ".chat.com" : undefined,
+        secure: IS_PROD,
+      },
     },
   },
   debug: process.env.NODE_ENV === "development",

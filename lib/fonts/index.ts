@@ -1,5 +1,5 @@
 import localFont from "next/font/local";
-import { Inter as FontSans, Instrument_Serif as FontSerif } from "next/font/google";
+import { Inter as FontSans, Playfair_Display as FontSerif } from "next/font/google";
 
 export const fontMono = localFont({
   src: "./GeistMonoVF.woff",
@@ -17,9 +17,3 @@ export const fontSerif = FontSerif({
   weight: ["400"],
   variable: "--font-serif",
 });
-
-export default {
-  fontMono,
-  fontSans,
-  fontSerif,
-};

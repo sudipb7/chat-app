@@ -7,9 +7,7 @@ export default function Home() {
   return (
     <main className="h-screen grid place-items-center">
       <div className="space-y-2.5 flex flex-col mx-auto max-w-lg">
-        <h1 className="text-3xl font-semibold">
-          Welcome to Chat App
-        </h1>
+        <h1 className="text-3xl font-semibold">Welcome to Chat App</h1>
         <p className="text-muted-foreground font-mono">
           Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt
           ut labore et dolore magna aliqua.

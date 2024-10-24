@@ -1,4 +1,4 @@
-import { getToken } from "next-auth/jwt";
+import { jwtVerify } from "jose";
 import { NextRequest } from "next/server";
 
 import db from "./db";
@@ -26,16 +26,35 @@ export const getUserByEmail = async (email: string) => {
 
 // Get user from token
 export async function getUserViaToken(req: NextRequest) {
-  const token = await getToken({
-    req,
-    secret: process.env.AUTH_SECRET,
-  });
+  const cookies = req.cookies
+    .toString()
+    .split(";")
+    .reduce(
+      (acc, cookie) => {
+        const [key, value] = cookie.split("=");
+        acc[key.trim()] = value;
+        return acc;
+      },
+      {} as Record<string, string>
+    );
 
-  if (!token?.sub) {
+  const cookieName =
+    process.env.NODE_ENV === "production" ? "__Secure" : "" + "authjs.session-token";
+  const sessionCookie = cookies[cookieName];
+  if (!sessionCookie) {
     return null;
   }
 
-  return await getUserById(token.sub);
+  const decodedSession = await jwtVerify(
+    sessionCookie,
+    new TextEncoder().encode(process.env.AUTH_SECRET as string)
+  );
+
+  if (!decodedSession?.payload?.sub) {
+    return null;
+  }
+
+  return getUserById(decodedSession.payload.sub);
 }
 
 export async function getCurrentUser() {
