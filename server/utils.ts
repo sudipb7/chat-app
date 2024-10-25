@@ -1,14 +1,14 @@
-import bcrypt from "bcryptjs";
 import { NextRequest } from "next/server";
+import { hashSync, compareSync } from "bcrypt-edge";
 
 import redis from "./redis";
 
-export async function hashPassword(password: string) {
-  return bcrypt.hash(password, 10);
+export function hashPassword(password: string) {
+  return hashSync(password, 10);
 }
 
-export async function comparePassword(password: string, hashedPassword: string) {
-  return bcrypt.compare(password, hashedPassword);
+export function comparePassword(password: string, hashedPassword: string) {
+  return compareSync(password, hashedPassword);
 }
 
 export function reqUrlParser(req: NextRequest) {
