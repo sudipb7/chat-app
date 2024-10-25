@@ -3,6 +3,7 @@ import { NextRequest } from "next/server";
 
 import db from "./db";
 import { auth } from "./auth";
+import { getOnboardingStep } from "./utils";
 
 export const getUserById = async (id: string) => {
   try {
@@ -25,36 +26,27 @@ export const getUserByEmail = async (email: string) => {
 };
 
 // Get user from token
-export async function getUserViaToken(req: NextRequest) {
-  const cookies = req.cookies
-    .toString()
-    .split(";")
-    .reduce(
-      (acc, cookie) => {
-        const [key, value] = cookie.split("=");
-        acc[key.trim()] = value;
-        return acc;
-      },
-      {} as Record<string, string>
-    );
+export async function getUserFromToken(token: string) {
+  try {
+    const secret = new TextEncoder().encode(process.env.AUTH_SECRET as string);
+    const decodedSession = await jwtVerify(token, secret);
 
-  const cookieName =
-    process.env.NODE_ENV === "production" ? "__Secure" : "" + "authjs.session-token";
-  const sessionCookie = cookies[cookieName];
-  if (!sessionCookie) {
+    if (!decodedSession?.payload?.sub) {
+      return null;
+    }
+
+    const user = await getUserById(decodedSession.payload.sub);
+    if (!user) {
+      return null;
+    }
+
+    const onboardingStatus = (await getOnboardingStep(user.id)) as string | null;
+
+    return { ...user, onboardingStatus };
+  } catch (error) {
+    console.error(error);
     return null;
   }
-
-  const decodedSession = await jwtVerify(
-    sessionCookie,
-    new TextEncoder().encode(process.env.AUTH_SECRET as string)
-  );
-
-  if (!decodedSession?.payload?.sub) {
-    return null;
-  }
-
-  return getUserById(decodedSession.payload.sub);
 }
 
 export async function getCurrentUser() {

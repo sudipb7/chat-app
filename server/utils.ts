@@ -3,6 +3,8 @@ import { hashSync, compareSync } from "bcrypt-edge";
 
 import redis from "./redis";
 
+const IS_PROD = process.env.NODE_ENV === "production";
+
 export function hashPassword(password: string) {
   return hashSync(password, 10);
 }
@@ -23,6 +25,29 @@ export function reqUrlParser(req: NextRequest) {
   const fullPath = `${path}${searchParamsString}`;
 
   return { domain, path, fullPath };
+}
+
+export function getToken(req: NextRequest) {
+  const cookies = req.cookies
+    .toString()
+    .split(";")
+    .reduce(
+      (acc, cookie) => {
+        const [key, value] = cookie.split("=");
+        acc[key.trim()] = value;
+        return acc;
+      },
+      {} as Record<string, string>
+    );
+
+  const cookieName = IS_PROD ? "__Secure" : "" + "authjs.session-token";
+  const token = cookies[cookieName];
+
+  if (!token) {
+    return null;
+  }
+
+  return token;
 }
 
 // Get onboarding step from Redis
