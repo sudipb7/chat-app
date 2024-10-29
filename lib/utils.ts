@@ -9,12 +9,13 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatSession(session: Session) {
-  if (!session.user?.email) {
+  if (!session.userId) {
     return null;
   }
 
   return {
-    ...session.user,
+    userId: session.userId,
+    isOnboarded: session.isOnboarded,
     expires: session.expires,
   };
 }
@@ -32,7 +33,7 @@ export function getSearchParams(url: string) {
 export function handleClientError(error: unknown) {
   console.log(error);
   if (axios.isAxiosError(error) && error.response?.data) {
-    toast.error(error.response.data.error);
+    toast.error(error.response.data);
   } else if (error instanceof Error) {
     toast.error(error.message);
   } else {

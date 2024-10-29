@@ -7,6 +7,7 @@ import { SignJWT, jwtVerify } from "jose";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 
 import db from "./db";
+import { getIsUserOnboarded } from "./utils";
 import { getUserByEmail, getUserById } from "./queries";
 
 const IS_PROD = process.env.NODE_ENV === "production";
@@ -48,31 +49,18 @@ export const {
       const user = await getUserById(token.sub);
       if (!user) return token;
 
-      token.email = user.email;
-      token.name = user.name;
-      token.image = user.image;
+      token.userId = user.id;
 
-      if (user.username) {
-        token.username = user.username;
-      }
+      const isOnboarded = await getIsUserOnboarded(user.id);
+      token.isOnboarded = Boolean(isOnboarded);
 
       return token;
     },
     async session({ session, token }) {
-      if (token.sub) {
-        session.user.id = token.sub;
+      if (token.userId) {
+        session.userId = token.userId as string;
       }
-
-      if (token.email) {
-        session.user.email = token.email;
-        session.user.name = token.name;
-        session.user.image = token.image as string;
-      }
-
-      if (token.username && typeof token.username === "string") {
-        session.user.username = token.username;
-      }
-
+      session.isOnboarded = token.isOnboarded as boolean;
       return session;
     },
   },
@@ -81,6 +69,7 @@ export const {
     async encode({ secret, token }) {
       return await new SignJWT(token)
         .setProtectedHeader({ alg: "HS256" })
+        .setExpirationTime("30 days")
         .sign(new TextEncoder().encode(secret as string));
     },
     async decode({ secret, token }) {
@@ -101,6 +90,7 @@ export const {
       },
     },
   },
+  trustHost: true,
   debug: process.env.NODE_ENV === "development",
   pages: { signIn: "/sign-in" },
 });

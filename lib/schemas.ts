@@ -13,7 +13,8 @@ export const usernameSchema = z.object({
   username: z
     .string({ message: "Username is required" })
     .min(3, { message: "Username must at least 3 characters" })
-    .max(32, { message: "Username must be at most 32 characters" }),
+    .max(32, { message: "Username must be at most 32 characters" })
+    .refine((value) => !value.includes(" "), { message: "Username should not contain space" }),
 });
 
 export type UsernameInput = z.infer<typeof usernameSchema>;
@@ -22,7 +23,8 @@ export const userSchema = z.object({
   username: z
     .string({ message: "Username is required" })
     .min(3, { message: "Username must at least 3 characters" })
-    .max(32, { message: "Username must be at most 32 characters" }),
+    .max(32, { message: "Username must be at most 32 characters" })
+    .refine((value) => !value.includes(" "), { message: "Username should not contain space" }),
   email: z
     .string({ message: "Email is required" })
     .min(1, { message: "Email is required" })

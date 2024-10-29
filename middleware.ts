@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-import { getUserFromToken } from "./server/queries";
-import { getToken, reqUrlParser } from "./server/utils";
+import { auth } from "@/server/auth";
+import { reqUrlParser } from "@/server/utils";
 
 export const config = {
   matcher: [
@@ -17,9 +17,11 @@ export const config = {
   ],
 };
 
-export default async function middleware(req: NextRequest) {
+export default auth(async (req) => {
+  const isAuth = !!req.auth;
+  const isOnboarded = req.auth?.isOnboarded;
   const { fullPath, path } = reqUrlParser(req);
-  const isOnboardingRoute = path.startsWith("/onboarding");
+  const isOnboardingRoute = path === "/onboarding";
   const isPrivateRoute =
     path !== "/sign-in" &&
     path !== "/forgot-password" &&
@@ -27,26 +29,19 @@ export default async function middleware(req: NextRequest) {
     path !== "/" &&
     !path.startsWith("/reset-password");
 
-  const token = getToken(req);
-  if (!token && isPrivateRoute) {
+  if (!isAuth && isPrivateRoute) {
     return NextResponse.redirect(new URL(`/sign-in?redirectTo=${fullPath}`, req.url));
   }
 
-  if (token && isPrivateRoute) {
-    const user = await getUserFromToken(token);
-
-    if (!user) {
-      return NextResponse.redirect(new URL(`/sign-in?redirectTo=${fullPath}`, req.url));
-    }
-
-    if (user.onboardingStatus === "completed" && isOnboardingRoute) {
+  if (isAuth && isPrivateRoute) {
+    if (isOnboarded && isOnboardingRoute) {
       return NextResponse.redirect(new URL("/chat", req.url));
     }
 
-    if (user.onboardingStatus !== "completed" && !isOnboardingRoute) {
+    if (!isOnboarded && !isOnboardingRoute) {
       return NextResponse.redirect(new URL(`/onboarding`, req.url));
     }
   }
 
   return NextResponse.next();
-}
+});

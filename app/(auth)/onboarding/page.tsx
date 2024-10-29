@@ -1,24 +1,25 @@
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
 
-import { OnboardingForm } from "../_components";
 import { Logo } from "@/components/icons";
+import { OnboardingForm } from "../_components";
 import { getCurrentUser } from "@/server/queries";
-import { getOnboardingStep } from "@/server/utils";
+import { UserWithOnboardingStatus } from "@/types";
 
 export const metadata: Metadata = {
   title: "Claim your username",
   description: "Choose a username for your public profile",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function SignInPage() {
-  const user = await getCurrentUser();
+  const user = await getCurrentUser({ includeIsOnboarded: true });
   if (!user) {
     return redirect("/sign-in");
   }
 
-  const step = await getOnboardingStep(user.id);
-  if (step && step === "completed") {
+  if (user.isOnboarded) {
     return redirect("/chat");
   }
 
@@ -29,7 +30,7 @@ export default async function SignInPage() {
           <Logo className="mx-auto h-7 w-7" />
           <h1 className="font-serif text-2xl font-semibold">Claim your username</h1>
         </div>
-        <OnboardingForm user={user} />
+        <OnboardingForm user={user as UserWithOnboardingStatus} />
       </div>
     </main>
   );

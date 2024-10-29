@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import db from "@/server/db";
 import { userSchema } from "@/lib/schemas";
 import { withSession } from "@/server/withSession";
-import { setOnboardingStep } from "@/server/utils";
+import { setIsUserOnboarded } from "@/server/utils";
 
 export const PATCH = withSession(
   async ({ req, params, session, searchParams }) => {
@@ -14,24 +14,18 @@ export const PATCH = withSession(
       return new NextResponse(validated.error.errors[0].message, { status: 400 });
     }
 
-    if (session?.id !== params.userId) {
+    if (session?.userId !== params.userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
     const user = await db.user.update({
-      where: { id: session.id },
+      where: { id: session.userId },
       data: { ...validated.data, username: validated.data.username.toLowerCase() },
     });
 
     // Set onboarding step
-    if (isOnboarding && !session.username) {
-      if (!user.username) {
-        return new NextResponse("User must have a username to complete onboarding", {
-          status: 400,
-        });
-      }
-
-      await setOnboardingStep(user.id, "completed");
+    if (isOnboarding && !session.isOnboarded && user.username) {
+      setIsUserOnboarded(user.id);
     }
 
     return NextResponse.json(user);

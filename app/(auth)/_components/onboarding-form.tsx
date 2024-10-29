@@ -3,17 +3,21 @@
 import axios from "axios";
 import { toast } from "sonner";
 import { useEffect } from "react";
-import { User } from "@prisma/client";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 
+import { UserWithOnboardingStatus } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { handleClientError } from "@/lib/utils";
 import { UsernameInput, usernameSchema } from "@/lib/schemas";
 
-export const OnboardingForm = ({ user }: { user: User }) => {
+interface OnboardingFormProps {
+  user: UserWithOnboardingStatus;
+}
+
+export const OnboardingForm = ({ user }: OnboardingFormProps) => {
   const router = useRouter();
 
   const {
@@ -51,7 +55,7 @@ export const OnboardingForm = ({ user }: { user: User }) => {
   const onSubmit = async (data: UsernameInput) => {
     try {
       await axios.patch(`/api/users/${user.id}?onboarding=true`, {
-        ...(!user.name && { name: data.username }), // Set username as name if name is not set
+        ...(!user.name && { name: data.username }),
         email: user.email,
         username: data.username,
       });

@@ -3,8 +3,6 @@ import { hashSync, compareSync } from "bcrypt-edge";
 
 import redis from "./redis";
 
-const IS_PROD = process.env.NODE_ENV === "production";
-
 export function hashPassword(password: string) {
   return hashSync(password, 10);
 }
@@ -27,35 +25,13 @@ export function reqUrlParser(req: NextRequest) {
   return { domain, path, fullPath };
 }
 
-export function getToken(req: NextRequest) {
-  const cookies = req.cookies
-    .toString()
-    .split(";")
-    .reduce(
-      (acc, cookie) => {
-        const [key, value] = cookie.split("=");
-        acc[key.trim()] = value;
-        return acc;
-      },
-      {} as Record<string, string>
-    );
-
-  const cookieName = IS_PROD ? "__Secure" : "" + "authjs.session-token";
-  const token = cookies[cookieName];
-
-  if (!token) {
-    return null;
-  }
-
-  return token;
-}
-
 // Get onboarding step from Redis
-export function getOnboardingStep(userId: string) {
-  return redis.get(`onboarding-step:${userId}`);
+export async function getIsUserOnboarded(userId: string) {
+  const isOnboarded = await redis.get(`onboarding-step:${userId}`);
+  return isOnboarded === "completed";
 }
 
 // Set onboarding step in Redis
-export function setOnboardingStep(userId: string, step: "completed" | "started") {
-  return redis.set(`onboarding-step:${userId}`, step);
+export function setIsUserOnboarded(userId: string) {
+  return redis.set(`onboarding-step:${userId}`, "completed");
 }
