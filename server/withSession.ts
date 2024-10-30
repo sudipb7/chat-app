@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { getSearchParams } from "@/lib/utils";
-import { getSession } from "./utils";
 import { Session } from "@/types";
+import { getSearchParams } from "@/lib/utils";
+import { getSessionFromReq } from "@/server/utils";
 
 export type WithSessionHandler = ({
   searchParams,
@@ -27,7 +27,7 @@ export function withSession(handler: WithSessionHandler, metadata: WithSessionMe
     const searchParams = getSearchParams(req.url);
 
     try {
-      const session = await getSession();
+      const session = await getSessionFromReq(req);
       if (!session) {
         return new NextResponse("Unauthorized", { status: 401 });
       }

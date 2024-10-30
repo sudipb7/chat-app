@@ -14,12 +14,7 @@ export const PATCH = withSession(
       return new NextResponse(validated.error.errors[0].message, { status: 400 });
     }
 
-    if (session.id !== params.id) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
-
-    const existingUser = await db.user.findUnique({ where: { id: session.id } });
-    if (!existingUser) {
+    if (session.id !== params.userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
@@ -28,7 +23,6 @@ export const PATCH = withSession(
       data: {
         ...validated.data,
         username: validated.data.username.toLowerCase(),
-        ...(isOnboarding && !existingUser.name && { name: validated.data.username.toLowerCase() }),
       },
     });
 

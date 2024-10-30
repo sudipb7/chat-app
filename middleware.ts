@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSessionFromMiddleware, reqUrlParser } from "@/server/utils";
+import { getSessionFromReq, reqUrlParser } from "@/server/utils";
 
 export default async function middleware(req: NextRequest) {
-  const session = await getSessionFromMiddleware(req);
+  const session = await getSessionFromReq(req);
   const { fullPath, path } = reqUrlParser(req);
   const isOnboardingRoute = path === "/onboarding";
   const isAuthRoute = path === "/sign-in" || path === "/sign-up" || path === "/forgot-password";

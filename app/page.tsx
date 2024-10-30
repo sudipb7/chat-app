@@ -12,7 +12,7 @@ export default function Home() {
           Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt
           ut labore et dolore magna aliqua.
         </p>
-        <Button asChild className="w-fit">
+        <Button asChild className="w-fit" aria-label="Get Started">
           <Link href="/sign-in">Get Started</Link>
         </Button>
       </div>

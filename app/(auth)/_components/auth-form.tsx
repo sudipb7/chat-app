@@ -20,6 +20,7 @@ export const AuthForm = ({ className, ...props }: React.HTMLAttributes<HTMLDivEl
   const {
     handleSubmit,
     register,
+    reset,
     formState: { errors },
   } = useForm<SignInInput>({
     resolver: zodResolver(signInSchema),
@@ -36,6 +37,7 @@ export const AuthForm = ({ className, ...props }: React.HTMLAttributes<HTMLDivEl
     });
 
     setIsLoading(false);
+    reset();
 
     if (!signInResult?.ok) {
       return toast.error("Something went wrong.", {
@@ -73,7 +75,7 @@ export const AuthForm = ({ className, ...props }: React.HTMLAttributes<HTMLDivEl
               {errors.email?.message}
             </p>
           </div>
-          <Button size="lg" disabled={isLoading}>
+          <Button size="lg" disabled={isLoading} aria-label="Continue with Email">
             Continue with Email
           </Button>
         </div>
@@ -90,6 +92,7 @@ export const AuthForm = ({ className, ...props }: React.HTMLAttributes<HTMLDivEl
         size="lg"
         type="button"
         variant="outline"
+        aria-label="Continue with Github"
         onClick={() => {
           setIsLoading(true);
           signIn("github", { callbackUrl: searchParams?.get("redirectTo") || "/chat" });
@@ -104,6 +107,7 @@ export const AuthForm = ({ className, ...props }: React.HTMLAttributes<HTMLDivEl
         size="lg"
         type="button"
         variant="outline"
+        aria-label="Continue with Google"
         onClick={() => {
           setIsLoading(true);
           signIn("google", { callbackUrl: searchParams?.get("redirectTo") || "/chat" });

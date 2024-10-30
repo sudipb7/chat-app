@@ -7,17 +7,17 @@ import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { Session } from "@/types";
+import { UserWithOnboardingStatus } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { handleClientError } from "@/lib/utils";
 import { UsernameInput, usernameSchema } from "@/lib/schemas";
 
 interface OnboardingFormProps {
-  session: Session;
+  user: UserWithOnboardingStatus;
 }
 
-export const OnboardingForm = ({ session }: OnboardingFormProps) => {
+export const OnboardingForm = ({ user }: OnboardingFormProps) => {
   const router = useRouter();
 
   const {
@@ -54,9 +54,10 @@ export const OnboardingForm = ({ session }: OnboardingFormProps) => {
 
   const onSubmit = async (data: UsernameInput) => {
     try {
-      await axios.patch(`/api/users/${session.id}?onboarding=true`, {
-        email: session.email,
+      await axios.patch(`/api/users/${user.id}?onboarding=true`, {
+        email: user.email,
         username: data.username,
+        ...(!user.name ? { name: user.email.split("@")[0] } : { name: user.name }),
       });
       toast.success("Success!", { description: "Username claimed successfully." });
       const interval = setTimeout(() => {
@@ -96,7 +97,7 @@ export const OnboardingForm = ({ session }: OnboardingFormProps) => {
             {errors.username?.message}
           </p>
         </div>
-        <Button size="lg" disabled={isSubmitting}>
+        <Button size="lg" disabled={isSubmitting} aria-label="Claim your username">
           Claim
         </Button>
       </div>

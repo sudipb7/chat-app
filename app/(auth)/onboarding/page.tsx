@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 
 import { Logo } from "@/components/icons";
 import { OnboardingForm } from "../_components";
-import { getSession } from "@/server/utils";
+import { getCurrentUser } from "@/server/queries";
+import { UserWithOnboardingStatus } from "@/types";
 
 export const metadata: Metadata = {
   title: "Claim your username",
@@ -13,12 +14,12 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function SignInPage() {
-  const session = await getSession();
-  if (!session) {
+  const user = await getCurrentUser({ includeIsOnboarded: true });
+  if (!user) {
     return redirect("/sign-in");
   }
 
-  if (session.isOnboarded) {
+  if (user.isOnboarded) {
     return redirect("/chat");
   }
 
@@ -29,7 +30,7 @@ export default async function SignInPage() {
           <Logo className="mx-auto h-7 w-7" />
           <h1 className="font-serif text-2xl font-semibold">Claim your username</h1>
         </div>
-        <OnboardingForm session={session} />
+        <OnboardingForm user={user as UserWithOnboardingStatus} />
       </div>
     </main>
   );

@@ -2,15 +2,12 @@ import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import Github from "next-auth/providers/github";
 import Resend from "next-auth/providers/resend";
-import { JWT } from "next-auth/jwt";
-import { SignJWT, jwtVerify } from "jose";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 
 import db from "./db";
 import { getIsUserOnboarded } from "./utils";
 import { getUserByEmail, getUserById } from "./queries";
 
-const IS_PROD = process.env.NODE_ENV === "production";
 const OAUTH_OPTIONS = { allowDangerousEmailAccountLinking: true };
 const RESEND_OPTIONS = {
   from: `no-reply@${process.env.RESEND_DOMAIN}`,
@@ -64,33 +61,8 @@ export const {
       return session;
     },
   },
-  session: { strategy: "jwt" },
-  jwt: {
-    async encode({ secret, token }) {
-      return await new SignJWT(token)
-        .setProtectedHeader({ alg: "HS256" })
-        .setExpirationTime("30 days")
-        .sign(new TextEncoder().encode(secret as string));
-    },
-    async decode({ secret, token }) {
-      if (!token) return null;
-      return (await jwtVerify(token, new TextEncoder().encode(secret as string))).payload as JWT;
-    },
-  },
-  cookies: {
-    sessionToken: {
-      name: IS_PROD ? "__Secure" : "" + "authjs.session-token",
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        // Adding a leading dot in the domain allows subdomains to access the cookie
-        domain: IS_PROD ? ".chat.com" : undefined,
-        secure: IS_PROD,
-      },
-    },
-  },
   trustHost: true,
-  debug: process.env.NODE_ENV === "development",
+  session: { strategy: "jwt" },
   pages: { signIn: "/sign-in" },
+  debug: process.env.NODE_ENV === "development",
 });
