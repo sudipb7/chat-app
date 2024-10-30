@@ -7,17 +7,17 @@ import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { UserWithOnboardingStatus } from "@/types";
+import { Session } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { handleClientError } from "@/lib/utils";
 import { UsernameInput, usernameSchema } from "@/lib/schemas";
 
 interface OnboardingFormProps {
-  user: UserWithOnboardingStatus;
+  session: Session;
 }
 
-export const OnboardingForm = ({ user }: OnboardingFormProps) => {
+export const OnboardingForm = ({ session }: OnboardingFormProps) => {
   const router = useRouter();
 
   const {
@@ -54,9 +54,8 @@ export const OnboardingForm = ({ user }: OnboardingFormProps) => {
 
   const onSubmit = async (data: UsernameInput) => {
     try {
-      await axios.patch(`/api/users/${user.id}?onboarding=true`, {
-        ...(!user.name && { name: data.username }),
-        email: user.email,
+      await axios.patch(`/api/users/${session.id}?onboarding=true`, {
+        email: session.email,
         username: data.username,
       });
       toast.success("Success!", { description: "Username claimed successfully." });

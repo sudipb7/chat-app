@@ -49,7 +49,7 @@ export const {
       const user = await getUserById(token.sub);
       if (!user) return token;
 
-      token.userId = user.id;
+      token.id = user.id;
 
       const isOnboarded = await getIsUserOnboarded(user.id);
       token.isOnboarded = Boolean(isOnboarded);
@@ -57,8 +57,8 @@ export const {
       return token;
     },
     async session({ session, token }) {
-      if (token.userId) {
-        session.userId = token.userId as string;
+      if (token.id) {
+        session.id = token.id as string;
       }
       session.isOnboarded = token.isOnboarded as boolean;
       return session;

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { auth } from "@/server/auth";
-import { getSearchParams, formatSession } from "@/lib/utils";
+import { getSearchParams } from "@/lib/utils";
+import { getSession } from "./utils";
+import { Session } from "@/types";
 
 export type WithSessionHandler = ({
   searchParams,
@@ -12,7 +13,7 @@ export type WithSessionHandler = ({
   req: NextRequest;
   params: Record<string, string>;
   searchParams: Record<string, string>;
-  session: ReturnType<typeof formatSession>;
+  session: Session;
 }) => Promise<NextResponse>;
 
 export type WithSessionMetadata = {
@@ -26,12 +27,12 @@ export function withSession(handler: WithSessionHandler, metadata: WithSessionMe
     const searchParams = getSearchParams(req.url);
 
     try {
-      const session = await auth();
-      if (!session?.userId) {
+      const session = await getSession();
+      if (!session) {
         return new NextResponse("Unauthorized", { status: 401 });
       }
 
-      return await handler({ req, params, searchParams, session: formatSession(session) });
+      return await handler({ req, params, searchParams, session });
     } catch (error) {
       console.error(`[ERROR] >> ${metadata.method.toUpperCase()}: ${metadata.route}\n`, error);
       return new NextResponse("Internal Server Error", { status: 500 });

@@ -14,13 +14,22 @@ export const PATCH = withSession(
       return new NextResponse(validated.error.errors[0].message, { status: 400 });
     }
 
-    if (session?.userId !== params.userId) {
+    if (session.id !== params.id) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const existingUser = await db.user.findUnique({ where: { id: session.id } });
+    if (!existingUser) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
     const user = await db.user.update({
-      where: { id: session.userId },
-      data: { ...validated.data, username: validated.data.username.toLowerCase() },
+      where: { id: session.id },
+      data: {
+        ...validated.data,
+        username: validated.data.username.toLowerCase(),
+        ...(isOnboarding && !existingUser.name && { name: validated.data.username.toLowerCase() }),
+      },
     });
 
     // Set onboarding step
@@ -32,6 +41,6 @@ export const PATCH = withSession(
   },
   {
     method: "PATCH",
-    route: "/api/users/[userId]",
+    route: "/api/users/[id]",
   }
 );

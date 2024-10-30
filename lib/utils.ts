@@ -9,12 +9,12 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatSession(session: Session) {
-  if (!session.userId) {
+  if (!session.id) {
     return null;
   }
 
   return {
-    userId: session.userId,
+    id: session.id,
     isOnboarded: session.isOnboarded,
     expires: session.expires,
   };

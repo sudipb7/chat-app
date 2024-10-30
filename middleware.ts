@@ -1,7 +1,35 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { getSessionFromMiddleware, reqUrlParser } from "@/server/utils";
 
-import { auth } from "@/server/auth";
-import { reqUrlParser } from "@/server/utils";
+export default async function middleware(req: NextRequest) {
+  const session = await getSessionFromMiddleware(req);
+  const { fullPath, path } = reqUrlParser(req);
+  const isOnboardingRoute = path === "/onboarding";
+  const isAuthRoute = path === "/sign-in" || path === "/sign-up" || path === "/forgot-password";
+  const isPrivateRoute = !isAuthRoute && path !== "/" && !path.startsWith("/reset-password");
+
+  if (!session && isPrivateRoute) {
+    return NextResponse.redirect(new URL(`/sign-in?redirectTo=${fullPath}`, req.url));
+  }
+
+  if (session && isAuthRoute) {
+    return NextResponse.redirect(new URL("/chat", req.url));
+  }
+
+  if (session && isPrivateRoute) {
+    if (session.isOnboarded && isOnboardingRoute) {
+      return NextResponse.redirect(new URL("/chat", req.url));
+    }
+
+    if (!session.isOnboarded && !isOnboardingRoute) {
+      return NextResponse.redirect(new URL(`/onboarding`, req.url));
+    }
+
+    return NextResponse.next();
+  }
+
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: [
@@ -16,32 +44,3 @@ export const config = {
     "/((?!api/|_next/|_proxy/|_static/|favicon.ico|sitemap.xml|robots.txt|manifest.webmanifest|.well-known).*)",
   ],
 };
-
-export default auth(async (req) => {
-  const isAuth = !!req.auth;
-  const isOnboarded = req.auth?.isOnboarded;
-  const { fullPath, path } = reqUrlParser(req);
-  const isOnboardingRoute = path === "/onboarding";
-  const isPrivateRoute =
-    path !== "/sign-in" &&
-    path !== "/forgot-password" &&
-    path !== "/sign-up" &&
-    path !== "/" &&
-    !path.startsWith("/reset-password");
-
-  if (!isAuth && isPrivateRoute) {
-    return NextResponse.redirect(new URL(`/sign-in?redirectTo=${fullPath}`, req.url));
-  }
-
-  if (isAuth && isPrivateRoute) {
-    if (isOnboarded && isOnboardingRoute) {
-      return NextResponse.redirect(new URL("/chat", req.url));
-    }
-
-    if (!isOnboarded && !isOnboardingRoute) {
-      return NextResponse.redirect(new URL(`/onboarding`, req.url));
-    }
-  }
-
-  return NextResponse.next();
-});

@@ -1,5 +1,5 @@
 import db from "./db";
-import { auth } from "./auth";
+import { getSession } from "./utils";
 
 export const getUserById = async (id: string) => {
   try {
@@ -23,15 +23,11 @@ export const getUserByEmail = async (email: string) => {
 
 export async function getCurrentUser({ includeIsOnboarded = false } = {}) {
   try {
-    const session = await auth();
-    if (!session?.userId) {
-      return null;
-    }
+    const session = await getSession();
+    if (!session) return null;
 
-    const user = await getUserById(session.userId);
-    if (!user) {
-      return null;
-    }
+    const user = await getUserById(session.id);
+    if (!user) return null;
 
     return { ...user, ...(includeIsOnboarded && { isOnboarded: session.isOnboarded }) };
   } catch (error) {
